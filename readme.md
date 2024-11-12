@@ -11,7 +11,7 @@ To run this solution, you need:
   ```plaintext
   DB_USER=username         # Your database username
   DB_PASSWORD=password     # Your database password
-  DB_NAME=database_name    # Name of the Tēzaurs database
+  DB_NAME=database_name    # Name of the database
 
 
 
