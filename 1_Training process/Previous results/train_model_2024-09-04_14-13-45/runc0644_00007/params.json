@@ -1,0 +1,12 @@
+{
+  "activation": "relu",
+  "batch_size": 128,
+  "dropout_rate": 0.0,
+  "hidden_sizes": [
+    512
+  ],
+  "lr": 7.217908897634606e-06,
+  "num_epochs": 89,
+  "optimizer": "Adam",
+  "postive_percentage": 0.4
+}
