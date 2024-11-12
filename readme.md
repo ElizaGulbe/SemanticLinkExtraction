@@ -25,25 +25,42 @@ The training process includes five key steps:
 
 1. **Database Connection**: Establish a connection to Tēzaurs DB.
 2. **Data Embedding**: Convert textual data into embeddings using **HPLT embedding**.
-3. **Negative Dataset Generation**: Generate negative examples for training purposes.
+3. **Negative Dataset Generation**: Generate negative examples for training purposes based on the positive examples.
 4. **Model Training**: Train the machine learning model on labeled data.
 5. **Results Analysis**: Analyze model performance based on training results.
 
-#### Training Data
 
-The training dataset consists of manually labeled examples for relationships including:
-
-- **Synonymy**
-- **Hypernymy**
-- **Antonymy**
-- **Holonymy**
-- **Similarity**
 
 *To-Do*: Include precise definitions for each relationship type.
 
-#### Positive Example Extraction
+#### Database Connection and Positive example extraction 
 
 - The script for extracting positive examples is located at:
 
   ```plaintext
   1_Training process/Dataset/1_positive_example_extraction.py
+  
+The resulting csv file will generate all **unique** relationships recorded in the Latvian WordNet dataset. 
+
+#### Database Connection and Positive example extraction 
+
+- **Synonymy**
+- **Hypernymy**
+- **Antonymy**
+- **Holonymy**
+- **Similar**
+- **Also**
+
+#### Data embedding 
+
+We embed the labeled data using **HPLT embedding** (see [HPLT embedding on Hugging Face](https://huggingface.co/HPLT/hplt_bert_base_lv)).
+
+- The script for extracting positive examples is located at:
+  ```plaintext
+  1_Training process/Dataset/2_embed_positive_examples.py
+
+#### Negative Dataset Generation
+TO DO : High-level aprakstit visas pieejamas strategijas
+
+
+
