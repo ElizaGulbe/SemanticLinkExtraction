@@ -5,6 +5,11 @@ import pickle  # Import pickle for serialization
 import embeddings.hplt_embedding as embedding  # Change import if you want to use a different embedding
 from transformers import AutoTokenizer, AutoModel
 
+"""
+The purpose of this file is to embed the dataset. 
+These embedding will be used later in the training process. 
+"""
+
 tokenizer = AutoTokenizer.from_pretrained("HPLT/hplt_bert_base_lv")
 model = AutoModel.from_pretrained("HPLT/hplt_bert_base_lv", trust_remote_code=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -21,9 +26,12 @@ df["sense2_heading_embedding"] = None
 def serialize_tensor(tensor):
     return pickle.dumps(tensor).hex()
 
-# Function to deserialize string back into tensor
-# sense1_id,sense1_entry_id,synset1_id,sense1_heading,sense1_gloss,heading1_PoS,sense2_id,sense2_entry_id,synset2_id,sense2_heading,sense2_gloss,heading2_PoS,rel_type
-# Update embeddings in the DataFrame
+# Update embeddings in the DataFrame 
+"""
+Because the embedding process takes a long time and we don't want to embed a specific row multiple times,
+we embedd a heading / gloss only once, then find all instances of that heading / gloss and add the embedding
+for all found instances
+"""
 for index, row in tqdm.tqdm(df.iterrows(), total=df.shape[0]):
     if pd.isna(row['sense1_gloss_embedding']):
         text_gloss_1 = str(row['sense1_gloss'])

@@ -75,10 +75,11 @@ load_dotenv()
 # Now you can access these variables using os.getenv
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
 
 try:
     with psycopg2.connect(
-        dbname="postgres", user=DB_USER, password=DB_PASSWORD, host="localhost", port="5432"
+        dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host="localhost", port="5432"
     ) as conn:
         cursor = conn.cursor()
 # Add hypernymy, also, similar, antonym,holonym relationship
