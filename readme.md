@@ -1,54 +1,49 @@
-This repository contains a solution for hypernymy and synonymy detection problem using machine learning applications. 
+# Hypernymy and Synonymy Detection with Machine Learning
 
-Prerequisite : you should have an established connection to Tēzaurs DB (production or a copy). You should create your own .env file with the following parameters to run the files. 
+This repository contains a solution for detecting hypernymy and synonymy relationships using machine learning techniques. The approach is designed to work in conjunction with the Tēzaurs Database (DB) and requires specific setup steps for connection and configuration.
 
-DB_NAME - username
-DB_PASSWORD - pasword 
-DB_NAME - name of the database 
+## Prerequisites
 
+To run this solution, you need:
+- An established connection to the **Tēzaurs DB** (either the production DB or a copy).
+- A custom `.env` file in the root directory with the following parameters:
 
-The link detection process consists mainly of 3 important steps : 
-
-1) Training process
-2) Candidate generation
-3) Link extraction / detection 
-
-1. Training process.  
-
-The training process contains of 5 steps : 
-* Connection to Tēzaurs DB 
-* Data embedding 
-* Generation of negative dataset examples
-* Training process
-* Results analysis 
-
-2. Candidate generation. 
-
-To narrow the search space, we have developed c
+  ```plaintext
+  DB_USER=username         # Your database username
+  DB_PASSWORD=password     # Your database password
+  DB_NAME=database_name    # Name of the Tēzaurs database
 
 
 
-The training data consists of manually labeled dataset and includes these relations - synonymy, hypernymy, antonymy, holonymy, similar and also. 
+## Link Detection Process
 
-To DO - definitions of these links 
+The link detection workflow is structured in three main stages:
 
-The process of extracting positive examples is available under 1_Training process/Dataset/1_positive_example_extraction.py
+### 1. Training Process
 
-We use the manually labeled dataset as the basis for the training training dataset. 
+The training process includes five key steps:
 
-Afterwards we embed the data using HPLT embedding. More info about the HPLT is avialable here - https://huggingface.co/HPLT/hplt_bert_base_lv
+1. **Database Connection**: Establish a connection to Tēzaurs DB.
+2. **Data Embedding**: Convert textual data into embeddings using **HPLT embedding**.
+3. **Negative Dataset Generation**: Generate negative examples for training purposes.
+4. **Model Training**: Train the machine learning model on labeled data.
+5. **Results Analysis**: Analyze model performance based on training results.
 
-The embedding process is available at 1_Training process/Dataset/2_embed_positive_examples.py
+#### Training Data
 
-We extract negative examples based on the positive training dataset. 
+The training dataset consists of manually labeled examples for relationships including:
 
-To DO : write specifically about the  
+- **Synonymy**
+- **Hypernymy**
+- **Antonymy**
+- **Holonymy**
+- **Similarity**
 
+*To-Do*: Include precise definitions for each relationship type.
 
+#### Positive Example Extraction
 
+- The script for extracting positive examples is located at:
 
-
-Primārais dokuments ir repozitorija readme.md; ja kaut vajadzīgs kas nav tur, tad tas readme satur URL norādi uz to kur ir.
-pirmā lieta tur - nodokumentēt prerequisites kam ir jābūt lai to palaistu; ja kaut kādus failus/db jāņem no ārpuses, tad pateikt ko vajag un kur likt vai kur konfigurēt vietu;
-otrā lieta tur - instrukcija, kā reproducēt eksperimentus lai dabūtu galvenos mērījumciparus (tas ir grūti, jo tas nozīmē ka vajag arī varēt puslīdz viegli reproducēt)
-trešā lieta tur - instrukcijā, kā palaist pārapmācību un kur ko konfigurēt;
+  ```plaintext
+  1_Training process/Dataset/1_positive_example_extraction.py
