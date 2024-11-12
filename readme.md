@@ -61,4 +61,16 @@ We embed the labeled data using **HPLT embedding** (see [HPLT embedding on Huggi
 TO DO : High-level aprakstit visas pieejamas strategijas
 
 
+#### Model training
+TO DO : aprakstit model training
+
+#### Results analysis
+TO DO : High-level aprakstit visas pieejamas strategijas
+
+### 2. Candidate Generation
+### 3. Link extraction
+
+
+
+
 
