@@ -1,6 +1,6 @@
 # Hypernymy and Synonymy Detection with Machine Learning
 
-This repository contains a solution for detecting hypernymy and synonymy relationships using machine learning techniques. The approach is designed to work in conjunction with the Tēzaurs Database (DB) and requires specific setup steps for connection and configuration.
+This repository contains a solution for detecting hypernymy and synonymy relationships using machine learning. The approach is designed to work in conjunction with the **Tēzaurs Database** and requires specific setup steps for connection and configuration.
 
 ## Prerequisites
 
@@ -12,8 +12,6 @@ To run this solution, you need:
   DB_USER=username         # Your database username
   DB_PASSWORD=password     # Your database password
   DB_NAME=database_name    # Name of the database
-
-
 
 ## Link Detection Process
 
