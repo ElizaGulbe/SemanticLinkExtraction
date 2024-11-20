@@ -13,6 +13,8 @@ To run this solution, you need:
   DB_PASSWORD=password     # Your database password
   DB_NAME=database_name    # Name of the database
 
+
+    You can access the database by By contacting peteris@ailab.lv
 ## Link Detection Process
 
 The link detection workflow is structured in three main stages:
@@ -21,12 +23,11 @@ The link detection workflow is structured in three main stages:
 
 The training process includes five key steps:
 
-1. **Database Connection**: Establish a connection to Tēzaurs DB.
-2. **Data Embedding**: Convert textual data into embeddings using **HPLT embedding**.
-3. **Negative Dataset Generation**: Generate negative examples for training purposes based on the positive examples.
-4. **Model Training**: Train the machine learning model on labeled data.
-5. **Results Analysis**: Analyze model performance based on training results.
-
+1. **Database Connection**: Establish a connection to Tēzaurs DB. (1_Training process/Dataset/1_positive_example_extraction.py)
+2. **Data Embedding**: Convert textual data into embeddings using **HPLT embedding**. (1_Training process/Dataset/2_embed_positive_examples.py)
+3. **Negative Dataset Generation**: Generate negative examples for training purposes based on the positive examples. (1_Training process/Dataset/3_generate_training_dataset.py)
+4. **Model Training**: Train the machine learning model on labeled data. (1_Training process/Model/model.py)
+5. **Results Analysis**: Analyze model performance based on training results. (1_Training process/Model/Analysis tools)
 
 
 *To-Do*: Include precise definitions for each relationship type.
@@ -48,6 +49,11 @@ The resulting csv file will generate all **unique** relationships recorded in th
 - **Holonymy**
 - **Similar**
 - **Also**
+
+If you want to read the definitions of each of the semantic link types, please visit this resource: 
+https://wordnet.ailab.lv/data/documents/WordNet_vadlīnijas.pdf   - Section 2.1 (In Latvian)
+
+
 
 #### Data embedding 
 
