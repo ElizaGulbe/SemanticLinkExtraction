@@ -66,7 +66,7 @@ We embed the labeled data using **HPLT embedding** (see [HPLT embedding on Huggi
 
 The negative examples are retrieved from the positive examples dataset that we obtained in the initial phase from Tēzaurs DB. 
 To add negative examples to your dataset, run this file :
-  ```plaintext
+```plaintext
   1_Training process/Dataset/3_generate_training_dataset.py
 
 During the research phase, we have discovered several different strategies for building the training dataset, speficically negative training data. 
