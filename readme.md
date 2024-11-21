@@ -60,6 +60,7 @@ We embed the labeled data using **HPLT embedding** (see [HPLT embedding on Huggi
 - The script for extracting positive examples is located at:
 ```plaintext
   1_Training process/Dataset/2_embed_positive_examples.py
+```
 
 
 #### Negative Dataset Generation 
@@ -68,6 +69,7 @@ The negative examples are retrieved from the positive examples dataset that we o
 To add negative examples to your dataset, run this file :
 ```plaintext
   1_Training process/Dataset/3_generate_training_dataset.py
+```
 
 During the research phase, we have discovered several different strategies for building the training dataset, speficically negative training data. 
 
@@ -83,8 +85,11 @@ You can access the model training code here  :
 
 ```plaintext
     1_Training process/Model/model.py
+```
 
-We are using ray library - https://docs.ray.io/en/latest/index.html for the training process.  This library allows to test different model architectures, dropout rates, activation functions, optimizers and hyperparameter such as learning rate and epochs. Using this library you can report different metrics, checkpoints, weights etc, it is quite flexible.
+
+
+We are using [ray library](https://docs.ray.io/en/latest/index.html) for the training process.  This library allows to test different model architectures, dropout rates, activation functions, optimizers and hyperparameter such as learning rate and epochs. Using this library you can report different metrics, checkpoints, weights etc, it is quite flexible.
 
 **However**, I have noticed that sometimes this library experiences issues with the length of filepaths. When you load the the dataset, you must use the absolute path, not relative path. For some reason I also had problems with creating the reports of runs, so I saved them under the root directory. 
 
