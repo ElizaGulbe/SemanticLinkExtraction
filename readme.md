@@ -58,7 +58,7 @@ https://wordnet.ailab.lv/data/documents/WordNet_vadlīnijas.pdf   - Section 2.1 
 We embed the labeled data using **HPLT embedding** (see [HPLT embedding on Hugging Face](https://huggingface.co/HPLT/hplt_bert_base_lv)).
 
 - The script for extracting positive examples is located at:
-  ```plaintext
+```plaintext
   1_Training process/Dataset/2_embed_positive_examples.py
 
 
