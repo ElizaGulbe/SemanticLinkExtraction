@@ -81,8 +81,8 @@ During the research phase, we have discovered several different strategies for b
 
 You can access the model training code here  :
 
-  ```plaintext
-  1_Training process/Model/model.py
+```plaintext
+    1_Training process/Model/model.py
 
 We are using ray library - https://docs.ray.io/en/latest/index.html for the training process.  This library allows to test different model architectures, dropout rates, activation functions, optimizers and hyperparameter such as learning rate and epochs. Using this library you can report different metrics, checkpoints, weights etc, it is quite flexible.
 
