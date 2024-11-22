@@ -81,20 +81,41 @@ During the research phase, we have discovered several different strategies for b
 
 #### Model training
 
-You can access the model training code here  :
+The aim of the model training process is to learn to detect synonymy, hypernymy and none (other types that are not synonymy or hypernymy) relationship between two word senses.  
+
+Input layer - a concatenation of word_1 embedding, sense_1 embedding, word_2 embedding, sense_2 embedding of size 3072;
+
+Afterwards we implement series of linear and activation functions (you can change this in the search_space variable)
+
+For the last layer we use SoftMax activation to convert raw output scores — into probabilities 
+
+The output layer is a vecotr of size (3,) with displaying the probability of the relationship type (hypernymy, none, synonymy)
+
+You can access the model training code here : 
 
 ```plaintext
     1_Training process/Model/model.py
 ```
 
-
-
 We are using [ray library](https://docs.ray.io/en/latest/index.html) for the training process.  This library allows to test different model architectures, dropout rates, activation functions, optimizers and hyperparameter such as learning rate and epochs. Using this library you can report different metrics, checkpoints, weights etc, it is quite flexible.
 
-**However**, I have noticed that sometimes this library experiences issues with the length of filepaths. When you load the the dataset, you must use the absolute path, not relative path. For some reason I also had problems with creating the reports of runs, so I saved them under the root directory. 
+**However**, I have noticed that sometimes this library experiences issues with the length of filepaths. When you load the the dataset, you must use the absolute path, not relative path. For some reason I also had problems with creating the reports of runs, so I saved them under the root directory and then copied the results into  
+```plaintext
+1_Training process/Previous results
+```
 
 #### Results analysis
-TO DO : High-level aprakstit visas pieejamas strategijas
+**TO DO** : pielikt atlikusos testus. 
+
+To assess performance of different architectures, hyperparameter strategies, I've built 2 custom tools. 
+1. A Dashboard that shows how different parameters in the search_space from the training process influence test dataset resuts located here 
+```plaintext
+1_Training process/Model/Analysis tools/dashboard_analysis.py
+```
+2. An excel file overview generator that displays each row as a training result instance and shows path to the weights located here : 
+```plaintext
+1_Training process/Model/Analysis tools/excel_overview.py
+```
 
 ### 2. Candidate Generation
 ### 3. Link extraction
