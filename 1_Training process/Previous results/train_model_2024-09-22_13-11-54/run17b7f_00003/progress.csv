@@ -1,0 +1,15 @@
+accuracy,precision,recall,f1_score,confusion_matrix,classification_report,timestamp,checkpoint_dir_name,should_checkpoint,done,training_iteration,trial_id,date,time_this_iter_s,time_total_s,pid,hostname,node_ip,time_since_restore,iterations_since_restore
+0.9043153244988107,0.905062807369812,0.9043153244988107,0.9042934036168342,"[[ 2424    52   567    60]
+ [   21  2716   330    52]
+ [  473   506 21437  1356]
+ [   38    84   685 13344]]","              precision    recall  f1-score   support
+
+    hypernym       0.82      0.78      0.80      3103
+     hyponym       0.81      0.87      0.84      3119
+        none       0.93      0.90      0.92     23772
+    synonymy       0.90      0.94      0.92     14151
+
+    accuracy                           0.90     44145
+   macro avg       0.87      0.87      0.87     44145
+weighted avg       0.91      0.90      0.90     44145
+",1727005205,checkpoint_000000,True,False,1,17b7f_00003,2024-09-22_14-40-05,2022.3562896251678,2022.3562896251678,16376,Davidovic,127.0.0.1,2022.3562896251678,1
