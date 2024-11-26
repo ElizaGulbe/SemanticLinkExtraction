@@ -1,0 +1,14 @@
+{
+  "activation": "tanh",
+  "batch_size": 64,
+  "dropout_rate": 0.0,
+  "hidden_sizes": [
+    2048,
+    512,
+    128
+  ],
+  "lr": 2.149278815656495e-07,
+  "num_epochs": 96,
+  "optimizer": "RMSprop",
+  "postive_percentage": 0.6
+}
