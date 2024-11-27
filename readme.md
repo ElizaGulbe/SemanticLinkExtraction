@@ -103,8 +103,11 @@ We are using [ray library](https://docs.ray.io/en/latest/index.html) for the tra
 ```plaintext
 1_Training process/Previous results
 ```
-
 #### Results analysis
+You can access the results of existing runs here: 
+```plaintext
+1_Training process/Previous results
+```
 **TO DO** : pielikt atlikusos testus. 
 
 To assess performance of different architectures, hyperparameter strategies, I've built 2 custom tools. 
@@ -116,8 +119,16 @@ To assess performance of different architectures, hyperparameter strategies, I'v
 ```plaintext
 1_Training process/Model/Analysis tools/excel_overview.py
 ```
-
 ### 2. Candidate Generation
+
+**Important** if you are using embeddings for semantic detection tasks in Latvian, I don't recommend considering 
+
+Once we have trained the model to predict hypernymy, synonymy or other relationships, we can now apply the model to expansion of the WordNet. During the experimentation phase we mainly considered 3 strategies for synonymy or hypernymy candidate generation : 
+1. For every sense in the Tēzaurs DB, we compare it with all other senses in the DB to find the highest probabilities for synonymy/hypernymy. We didn't opt for this strategy due to the fact that it is computationally expensive. 
+2. Apply semantic relation rule-based extraction principles for nouns as described in [existing research](http://www.semti-kamols.lv/doc_upl/Kamols-Liepaja-raksts.pdf) from the definition of the word. (For hypernymy, however, you can also find patterns there, for synonymy, antonymy etc.)
+3. Map Tēzaurs DB to exisitng synonym dictionary.(For synonymy)
+
+This repository provides implementation code for the second and third strategy.  
 ### 3. Link extraction
 
 

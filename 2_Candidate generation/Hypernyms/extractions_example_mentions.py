@@ -11,10 +11,11 @@ load_dotenv()
 # Now you can access these variables using os.getenv
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
 
 # Read the content of the file
 conn = psycopg2.connect(
-    dbname="postgres",
+    dbname=DB_NAME,
     user=DB_USER,
     password=DB_PASSWORD,
     host="localhost",

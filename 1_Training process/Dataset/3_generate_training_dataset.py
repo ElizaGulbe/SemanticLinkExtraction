@@ -6,9 +6,20 @@ tqdm.pandas(desc="Generating random examples")
 import numpy as np
 
 
-"""The purpose of this file is to """
+"""In every model training process it is important to add negative examples. Because of the size of the dataset, I focused only on 
+hypernymy and synonymy because there was insufficient training data for other examples. """
 
+"""This code covers several strategies for generating negative examples. 
 
+1. Higher-level hypernyms: those not falling under direct hypernyms;
+2. Random negative examples
+3. Embedding vectors that have a close Eucledian distance but do not have an existing recorded relationship in the dataset
+4. Unrelated senses of related words.
+5. Similar/also/antonyms/holonyms - already recorded examples from different relation types that do not fall under the definition of hypernym or synonym  
+"""
+
+df = pd.read_csv("Production/Prepare dataset/Source/nouns_relation_embeddings.csv")
+df_nouns = pd.read_csv("Production/Prepare dataset/Source/nouns_with_embeddings.csv")
 
 def compute_top_euclidean_similarities(tf_tensor, top_n=5):
     # Step 1: Compute the Euclidean distance matrix
@@ -40,18 +51,11 @@ def compute_top_euclidean_similarities(tf_tensor, top_n=5):
 
     return top_indices_list
 
-
 def deserialize_tensor(serialized_tensor):
     return pickle.loads(bytes.fromhex(serialized_tensor))
 
 def serialize_tensor(tensor):
     return pickle.dumps(tensor).hex()
-
-
-# /
-df = pd.read_csv("Production/Prepare dataset/Source/nouns_relation_embeddings.csv")
-df_nouns = pd.read_csv("Production/Prepare dataset/Source/nouns_with_embeddings.csv")
-i=0
 
 embeddings_only = []
 def add_embedding_only_row(row):
@@ -75,7 +79,6 @@ def add_embedding_only_row(row):
 }
     embeddings_only.append(new_row_1)
     embeddings_only.append(new_row_2)
-
 
 none_relations_similarity = []
 def add_none_similarity_relation(row1, row2): 
@@ -141,25 +144,30 @@ def add_new_row_grandparents(row1, row2):
     none_relations_grandparents.append(new_row)
 
 
+
+# get all unique senses with their embeddings 
+# TO DO - just use only embeddings file. 
 for index, row in tqdm(df.iterrows(),total=df.shape[0]):
     add_embedding_only_row(row)
-df_only_embeddings = pd.DataFrame(embeddings_only)
-df_only_embeddings = df_only_embeddings.drop_duplicates(subset=['sense_id'],keep='first')
-df_only_embeddings = df_only_embeddings.reset_index(drop=True)
-tensor_list = df_only_embeddings['sense_gloss_embedding'].tolist()
+df_individual_senses_emb = pd.DataFrame(embeddings_only)
+df_individual_senses_emb = df_individual_senses_emb.drop_duplicates(subset=['sense_id'],keep='first')
+df_individual_senses_emb = df_individual_senses_emb.reset_index(drop=True)
+tensor_list = df_individual_senses_emb['sense_gloss_embedding'].tolist()
 tensor_list_reduce_dim = [item[0] for item in tensor_list] 
-
 tf_tensor = tf.stack(tensor_list_reduce_dim)
 
-top_similarities_indices = compute_top_euclidean_similarities(tf_tensor, top_n=10)
-for i, indices in tqdm(enumerate(top_similarities_indices)):
-    sense_id = df_only_embeddings.loc[i,"sense_id"]
-    all_instances_sense_id = df[(df["sense1_id"] == sense_id) | (df["sense2_id"] == sense_id)]
-    for idx in indices: 
-        candidate_sense_id = df_only_embeddings.loc[idx,"sense_id"]
-        relation_exists = (candidate_sense_id in all_instances_sense_id['sense1_id'] ) | (candidate_sense_id in all_instances_sense_id['sense2_id'])
-        if not relation_exists: 
-            add_none_similarity_relation(df_only_embeddings.loc[i,:],df_only_embeddings.loc[int(idx),:])
+
+
+def generate_close_distance_candidates():
+    top_similarities_indices = compute_top_euclidean_similarities(tf_tensor, top_n=10)
+    for i, indices in tqdm(enumerate(top_similarities_indices)):
+        sense_id = df_individual_senses_emb.loc[i,"sense_id"]
+        all_instances_sense_id = df[(df["sense1_id"] == sense_id) | (df["sense2_id"] == sense_id)]
+        for idx in indices: 
+            candidate_sense_id = df_individual_senses_emb.loc[idx,"sense_id"]
+            relation_exists = (candidate_sense_id in all_instances_sense_id['sense1_id'] ) | (candidate_sense_id in all_instances_sense_id['sense2_id'])
+            if not relation_exists: 
+                add_none_similarity_relation(df_individual_senses_emb.loc[i,:],df_individual_senses_emb.loc[int(idx),:])
 
 
 def generate_random_negative_examples(row):
@@ -319,13 +327,21 @@ def add_gloss_none_relationship():
                 add_gloss_none_row_synonym(entry2,entry1)
  
         
-        
-for idx, row in tqdm(df.iterrows(),total=df.shape[0]):
-    generate_random_negative_examples(row)
 
+
+for idx, row in tqdm(df.iterrows(),total=df.shape[0]): # samples random rows 
+    generate_random_negative_examples(row)
 find_hypernym_grandparanets()
-#add_asymetric_relationships()
+#add_asymetric_relationships() # you can uncomment this if you want.
+"""
+# add_asymetric_relationships () switches sense_1 and sense_2 in place to add a new relationship hyponym / holonym, however, it is not used at the moment
+# 
+"""
 add_gloss_none_relationship()
+# For example if there is heading A with gloss containing sense 1, sense 2, sense 3, and heading B with gloss containing 
+# sense 4, sense 5, and sense 6. We have recorded that sense 2 from heading A and sense 4 from heading B are synonyms. Therefore, 
+# we create negative example by taking, for example, sense 1 and sense 5 
+generate_close_distance_candidates()
 none_grandparents_relations_df = pd.DataFrame(none_relations_grandparents)
 none_random_relations_df = pd.DataFrame(none_relations_random)            
 none_similarity_relations_df = pd.DataFrame(none_relations_similarity)

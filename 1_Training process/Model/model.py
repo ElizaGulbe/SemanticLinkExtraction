@@ -49,7 +49,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def get_data(percentage_of_postive):
-    df = pd.read_csv(r"C:\Users\davis\OneDrive\Desktop\Eliza\ai.lab_programming\Production\training_dataset_nouns_with_none_hypernyms_synonyms_heading_new2910.csv",usecols=['sense1_gloss_embedding', "sense2_gloss_embedding", "sense1_heading_embedding", "sense2_heading_embedding" ,"rel_type"])
+    #df = pd.read_csv(r"",usecols=['sense1_gloss_embedding', "sense2_gloss_embedding", "sense1_heading_embedding", "sense2_heading_embedding" ,"rel_type"])
     print(df.columns)
     df = df[df["rel_type"] != 'hyponym']
     values_to_replace = ['holonym', 'meronym', 'antonym', 'also', 'similar',"hyponym"]

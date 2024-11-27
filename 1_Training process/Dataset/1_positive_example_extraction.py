@@ -121,6 +121,6 @@ try:
         df.drop_duplicates(subset=["sense1_id", "sense2_id"], inplace=True, keep="first")
         df = df[(df['heading1_PoS'] == 'Lietvārds') & (df['heading2_PoS'] == 'Lietvārds')]
         # Save DataFrame to CSV
-        df.to_csv("Training process/Dataset/positive_examples_nouns.csv", index=False)
+        df.to_csv("Training process/Dataset/1_positive_examples_nouns.csv", index=False)
 except psycopg2.Error as e:
     print(f"Database connection error: {e}")

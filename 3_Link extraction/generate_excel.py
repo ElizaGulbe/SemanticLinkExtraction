@@ -5,7 +5,6 @@ from openpyxl.cell.rich_text import TextBlock, CellRichText
 from openpyxl.cell.text import InlineFont
 from tqdm import tqdm
 import re
-import math
 import numpy as np
 
 
