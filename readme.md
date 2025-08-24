@@ -5,26 +5,29 @@ This repository contains a solution for detecting **hypernymy and synonymy** rel
 ## Prerequisites
 
 To run this solution, you need:
-- An established connection to the **Tēzaurs DB** (either the production DB or a copy). If you are interested in obtaining a copy of Tēzaurs DB, please contact Pēteris Paikens at @peterisp@gmail.com
+- An established connection to the **Tēzaurs DB** (either the production DB or a copy). While the data exports from tezaurs DB are available on CLARIN e.g. https://repository.clarin.lv/repository/xmlui/handle/20.500.12574/119, the postgresql DB copies are available only on request, if you are interested in obtaining a copy of Tēzaurs DB, please contact Pēteris Paikens at @peteris@ailab.lv
 - A custom `.env` file in the root directory with the following parameters:
 
   ```plaintext
+  DB_HOST=localhost        # Your database hostname
+  DB_PORT=5432             # Your database port
   DB_USER=username         # Your database username
   DB_PASSWORD=password     # Your database password
   DB_NAME=database_name    # Name of the database
+  ```
+In case the variables are not provided, default values (except for the password) will be used.
+- python3 venv with pytorch, psycopg2, pandas, transformers, tqdm, dotenv libraries
 
-
-You can access the database by By contacting peteris@ailab.lv
 ## Link Detection Process
 
-The link detection workflow is structured in three main stages : training process, candidate generatin and link extraction. 
+The link detection workflow is structured in three main stages : training process, candidate generation and link extraction. 
 
 ### 1. Training Process
 
 The training process includes five key steps:
 
-1. **Database Connection**: Establish a connection to Tēzaurs DB. (1_Training process/Dataset/1_positive_example_extraction.py)
-2. **Data Embedding**: Convert textual data into embeddings using **HPLT embedding**. (1_Training process/Dataset/2_embed_positive_examples.py)
+1. **Extract Positive Samples**: Establish a connection to Tēzaurs DB and extract existing semantic relations to use as positive samples for training data (1_Training process/Dataset/1_positive_example_extraction.py).
+2. **Data Embedding** (compute-intensive, took 2h on MBP, compressed output is ~0.3GB): Convert textual data into embeddings using **HPLT embedding**. (1_Training process/Dataset/2_embed_positive_examples.py)
 3. **Negative Sample Generation**: Generate negative examples for training purposes based on the positive examples. (1_Training process/Dataset/3_generate_training_dataset.py)
 4. **Model Training**: Train the machine learning model on labeled data. (1_Training process/Model/model.py)
 5. **Results Analysis**: Analyze model performance based on training results. (1_Training process/Model/Analysis tools)
@@ -36,7 +39,7 @@ The training process includes five key steps:
   ```plaintext
   1_Training process/Dataset/1_positive_example_extraction.py
   
-The resulting csv file will generate all **unique** relationships recorded in the Latvian WordNet dataset. 
+The resulting csv file at `1_Training process/Dataset/1_positive_examples_nouns.csv` will contain all **unique** relationships recorded in the Latvian WordNet dataset. 
 
 #### Database Connection and Positive example extraction 
 
@@ -75,7 +78,7 @@ During the research phase, we have discovered several different strategies for b
 
 1. Higher-level hypernyms: those not falling under direct hypernyms;
 2. Random negative examples
-3. Embedding vectors that have a close Eucledian distance but do not have an existing recorded relationship in the dataset
+3. Embedding vectors that have a close Euclidian distance but do not have an existing recorded relationship in the dataset
 4. Unrelated senses of related words.
 5. Similar/also/antonyms/holonyms - already recorded examples from different relation types that do not fall under the definition of hypernym or synonym 
 
@@ -121,7 +124,7 @@ To assess performance of different architectures, hyperparameter strategies, I'v
 ```
 ### 2. Candidate Generation
 
-**Important** if you are using embeddings for semantic detection tasks in Latvian, I don't recommend considering 
+**Important** if you are using embeddings for semantic detection tasks in Latvian, I don't recommend considering (? missing ?)
 
 Once we have trained the model to predict hypernymy, synonymy or other relationships, we can now apply the model to expansion of the WordNet. During the experimentation phase we mainly considered 3 strategies for synonymy or hypernymy candidate generation : 
 1. For every sense in the Tēzaurs DB, we compare it with all other senses in the DB to find the highest probabilities for synonymy/hypernymy. We didn't opt for this strategy due to the fact that it is computationally expensive. 

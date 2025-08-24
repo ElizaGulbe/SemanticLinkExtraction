@@ -1,1 +1,4 @@
 *.env
+*.pyc
+*.parquet
+1_Training process/Dataset/*.csv

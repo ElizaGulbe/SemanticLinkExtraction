@@ -48,14 +48,15 @@ class DynamicSemanticRelationModel(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def get_data(percentage_of_postive):
-    #df = pd.read_csv(r"",usecols=['sense1_gloss_embedding', "sense2_gloss_embedding", "sense1_heading_embedding", "sense2_heading_embedding" ,"rel_type"])
+def get_data(percentage_of_positive):
+    # df = pd.read_csv(r"",usecols=['sense1_gloss_embedding', "sense2_gloss_embedding", "sense1_heading_embedding", "sense2_heading_embedding" ,"rel_type"])
+    df = pd.read_parquet('/Users/pet/Documents/NLP/SemanticLinkExtraction/1_Training process/Dataset/training_dataset_nouns_pp.parquet')
     print(df.columns)
     df = df[df["rel_type"] != 'hyponym']
     values_to_replace = ['holonym', 'meronym', 'antonym', 'also', 'similar',"hyponym"]
     df['rel_type'] = df['rel_type'].replace(values_to_replace, 'none')
     count_non_none = df[~df['rel_type'].str.contains("none")].shape[0]
-    total_rows = round(count_non_none / percentage_of_postive)
+    total_rows = round(count_non_none / percentage_of_positive)
     count_none_grandparents = df[df['rel_type'] == 'none_grandparents'].shape[0]
     number_of_random_rows = total_rows- count_none_grandparents - df[df['rel_type'] == 'none'].shape[0]
     none_random_df = df[df['rel_type'] == 'none_random']
@@ -64,16 +65,16 @@ def get_data(percentage_of_postive):
     selected_similarity = none_similarity_df.head(round(number_of_random_rows*0.48))
     rows_per_type = round(number_of_random_rows * 0.42 / 3)
     none_gloss_df = df[df['rel_type'].isin(['none_gloss_synonym', 'none_gloss_hypernym', 'none_gloss_hyponym'])]
-    print(none_gloss_df["rel_type"].value_counts())
+
     # Sample rows equally from each rel_type
     synonym_sample = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_synonym'].sample(rows_per_type, random_state=1)
     hypernym_sample = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_hypernym'].sample(rows_per_type, random_state=1)
     hyponym_sample = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_hyponym'].sample(rows_per_type, random_state=1)
     df = pd.concat([selected_similarity,selected_random,synonym_sample, hyponym_sample,hypernym_sample ,df[~df['rel_type'].isin(['none_random', 'none_similarity',"none_gloss_hypernym",'none_gloss_synonym','none_gloss_hyponym'])]])
-    df["sense1_gloss_embedding"] = df["sense1_gloss_embedding"].apply(deserialize_tensor)
-    df["sense2_gloss_embedding"] = df["sense2_gloss_embedding"].apply(deserialize_tensor) 
-    df["sense1_heading_embedding"] = df["sense1_heading_embedding"].apply(deserialize_tensor)
-    df["sense2_heading_embedding"] = df["sense2_heading_embedding"].apply(deserialize_tensor) 
+    df["sense1_gloss_embedding"] = df["sense1_gloss_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None)
+    df["sense2_gloss_embedding"] = df["sense2_gloss_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None) 
+    df["sense1_heading_embedding"] = df["sense1_heading_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None)
+    df["sense2_heading_embedding"] = df["sense2_heading_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None) 
     df['rel_type'] = df['rel_type'].apply(lambda x: 'none' if 'none' in x else x)
     return df
 
@@ -82,7 +83,7 @@ def train_model(config):
     # Specify the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    df = get_data(percentage_of_postive=config["postive_percentage"])
+    df = get_data(percentage_of_positive=config["positive_percentage"])
 
     # Ensure all embeddings are moved to the CPU before using Pandas
     concatenated_vectors = df.apply(
@@ -176,6 +177,7 @@ def train_model(config):
         train.report(report, checkpoint=checkpoint)
 
     # Save the model after training
+    torch.save(model.state_dict(),'final_weights.pth')
 
 # Define the search space
 search_space = {
@@ -193,7 +195,7 @@ search_space = {
     "activation": tune.choice(['relu']),
     "optimizer": tune.choice(['Adam',]),
     "dropout_rate": tune.choice([0.0]),
-    "postive_percentage" : tune.grid_search([0.5])
+    "positive_percentage" : tune.grid_search([0.5])
 }
 def dynamic_trial_name_creator(trial):
     return f"run{trial.trial_id}"
@@ -202,7 +204,7 @@ analysis = tune.run(
     train_model, # Your training function
     config=search_space,
     trial_dirname_creator=dynamic_trial_name_creator,
-    storage_path="C:/ray_results",
+    storage_path="/Users/pet/Documents/NLP/SemanticLinkExtraction/1_Training process/ray_results",
     resources_per_trial={"cpu":12, "gpu": 1},
     num_samples=1500
 )

@@ -4,10 +4,11 @@ import itertools
 from tqdm import tqdm
 import os
 from dotenv import load_dotenv
+import pyarrow # parquet datu formātam
 
 """
 The purpose of this file is to select the existing data about the synsets and its relation with other synsets. 
-The outcome of this file is a CSV file containing unique relationships between word senses - synonymy, hypernymy, also, similar, antonym,meronym - 
+The outcome of this file is a CSV file containing unique relationships between word     s - synonymy, hypernymy, also, similar, antonym,meronym - 
 which is later used as the basis for the training/test dataset. 
 Currently we only work with nouns, but you can comment out this line "df = df[(df['heading1_PoS'] == 'Lietvārds') & (df['heading2_PoS'] == 'Lietvārds')]"
 if you want to include other PoS in the training process. 
@@ -73,13 +74,16 @@ For asymetric cases, the hypernym/holonym will always be attained to the columns
 load_dotenv()
 
 # Now you can access these variables using os.getenv
-DB_USER = os.getenv('DB_USER')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_NAME = os.getenv('DB_NAME')
+DB_NAME = os.getenv('DB_NAME', 'tezaurs_dv')
+
 
 try:
     with psycopg2.connect(
-        dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host="localhost", port="5432"
+        dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT
     ) as conn:
         cursor = conn.cursor()
 # Add hypernymy, also, similar, antonym,holonym relationship
@@ -120,7 +124,22 @@ try:
         # Drop duplicates and filter by Part of Speech
         df.drop_duplicates(subset=["sense1_id", "sense2_id"], inplace=True, keep="first")
         df = df[(df['heading1_PoS'] == 'Lietvārds') & (df['heading2_PoS'] == 'Lietvārds')]
-        # Save DataFrame to CSV
-        df.to_csv("Training process/Dataset/1_positive_examples_nouns.csv", index=False)
+        # Save DataFrame
+        # df.to_csv("1_positive_examples_nouns.csv", index=False)
+        df.to_parquet("1_positive_examples_nouns.parquet", index=False, compression="zstd")
+
+# PP - pieliku arī kautko līdzīgu lai izvelk datus, ko 3. solī šķiet ka vajag df_nouns daļai
+        nouns_query = """
+            select senses.id as sense_id, senses.entry_id, entries.heading as entry_heading, parent_sense_id, gloss, senses.order_no, sense_tag, synset_id, senses.hidden and entries.hidden as hidden
+            from senses 
+            join entries on senses.entry_id = entries.id
+            join dict.lexemes ON senses.entry_id = lexemes.entry_id
+            join dict.paradigms ON lexemes.paradigm_id = paradigms.id
+            where paradigms.data->>'Vārdšķira' = 'Lietvārds'
+        """
+        nouns_df = pd.read_sql(nouns_query, conn)
+        # nouns_df.to_csv("1_nouns.csv", index=False)
+        nouns_df.to_parquet("1_nouns.parquet", index=False, compression="zstd")
+
 except psycopg2.Error as e:
     print(f"Database connection error: {e}")
