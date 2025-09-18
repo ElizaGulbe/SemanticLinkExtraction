@@ -7,21 +7,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Now you can access these variables using os.getenv
-DB_USER = os.getenv('DB_USER')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME', 'tezaurs_dv')
+
 # Read the content of the file
 conn = psycopg2.connect(
-    dbname="postgres",
+    dbname=DB_NAME,
     user=DB_USER,
     password=DB_PASSWORD,
-    host="localhost",
-    port="5432"
+    host=DB_HOST,
+    port=DB_PORT
 )
 
 # Create a cursor object
 cursor = conn.cursor()
 def get_syn_relationships():
-    with open('Data selection/syn_dict.txt', 'r') as file:
+    with open('Synonyms/syn_dict.txt', 'r') as file:
         content = file.read()
 
     # Split the content into lines

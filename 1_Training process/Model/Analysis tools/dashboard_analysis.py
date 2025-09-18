@@ -6,7 +6,7 @@ import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
 # Set the path to the directory containing the runs
-results_dir = r"Production\ray_results\train_model_2024-11-02_13-27-01"
+results_dir = "../../ray_results/train_model_2025-08-24_22-09-38"
 
 # Initialize an empty list to store results
 data = []
@@ -19,9 +19,6 @@ for run_dir in os.listdir(results_dir):
     if os.path.exists(results_file):
         with open(results_file, 'r') as f:
             try:
-                if run_path[-2:] in ["01","03", "25","45","34"]:
-                    i = "hello"
-
                 results = json.load(f)
                 
                 # Extract metrics
@@ -39,7 +36,7 @@ for run_dir in os.listdir(results_dir):
                 hidden_sizes = str(config.get('hidden_sizes', []))
                 
                 # Combine metrics and config
-                combined = {**metrics, **config, 'hidden_sizes': hidden_sizes}
+                combined = {**metrics, **config, 'hidden_sizes': hidden_sizes, 'run_dir': run_dir}
                 data.append(combined)
                 
             except json.JSONDecodeError as e:
@@ -56,12 +53,18 @@ else:
 # Save the DataFrame to a CSV file for further analysis if needed
 df.to_csv('model_results_analysis.csv', index=False)
 
+# Find best run by f1_score
+best_idx = df['f1_score'].idxmax()
+best_run = df.loc[best_idx]
+
+print(f"Best run based on F1 score from folder: {results_dir}/{best_run['run_dir']}")
+
 # Descriptive statistics
 print("Descriptive Statistics:")
 print(df.describe())
 
 # Correlation analysis
-correlation_matrix = df.corr()
+correlation_matrix = df.select_dtypes(include=['number']).corr()
 print("\nCorrelation Matrix:")
 print(correlation_matrix)
 
@@ -72,7 +75,7 @@ plt.title('Correlation Matrix between Parameters and Metrics')
 plt.show()
 
 # Scatter plots for continuous parameters
-continuous_params = ['lr', 'num_epochs', 'batch_size', 'dropout_rate', 'postive_percentage']
+continuous_params = ['lr', 'num_epochs', 'batch_size', 'dropout_rate', 'positive_percentage']
 for param in continuous_params:
     for metric in ['accuracy', 'precision', 'recall', 'f1_score']:
         plt.figure(figsize=(8, 6))

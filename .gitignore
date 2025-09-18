@@ -2,3 +2,6 @@
 *.pyc
 *.parquet
 1_Training process/Dataset/*.csv
+1_Training process/ray_results
+2_Candidate generation/Data selection
+3_Link extraction/Output/

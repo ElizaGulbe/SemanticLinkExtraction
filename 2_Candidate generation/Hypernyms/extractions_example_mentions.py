@@ -9,28 +9,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Now you can access these variables using os.getenv
-DB_USER = os.getenv('DB_USER')
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_NAME = os.getenv('DB_NAME')
+DB_NAME = os.getenv('DB_NAME', 'tezaurs_dv')
 
 # Read the content of the file
 conn = psycopg2.connect(
     dbname=DB_NAME,
     user=DB_USER,
     password=DB_PASSWORD,
-    host="localhost",
-    port="5432"
+    host=DB_HOST,
+    port=DB_PORT
 )
 
 # Create a cursor object
-
 cursor = conn.cursor()
-
-
 dict_all = []
 
 def add_row(row1):
-    occurnace_1 = row1[8]["ratioPerMille"] if row1[8] else 0
+    occurrance_1 = row1[8].get('ratioPerMille') if row1[8] and row1[8].get('ratioPerMille') else 0
     pos_1 = row1[9].get('Vārdšķira') if row1[9] else "None"
     new_row = {
     'sense1_id': row1[0],
@@ -42,7 +41,7 @@ def add_row(row1):
     'sense1_order_no':row1[5],
     'sense1_tag':row1[6],
     'sense1_hidden': row1[7],
-    'sense1_heading_occurance':occurnace_1,
+    'sense1_heading_occurance':occurrance_1,
     'sense1_lexemes_extra': row1[10],
     }
     dict_all.append(new_row)
@@ -85,32 +84,24 @@ def get_all_queries():
 
 hypernym_candidates = []
 def add_hypernym_candidate(row1,row2): 
-    occurnace_2 = row2["ratioPerMille"] if row2["ratioPerMille"] else 0
-    pos_2 = row2['sense1_pos'] if row2['sense1_pos'] else "None"
-    new_row = {
-    'sense2_id': row1['sense1_id'],
-    'sense2_entry_id': row1['sense1_entry_id'],
-    'sense2_heading': row1['sense1_heading'],
-    'sense2_gloss': row1['sense1_gloss'],
-    'sense2_pos': row1['sense1_pos'],
-    'sense2_parent_sense_id': row1['sense1_parent_sense_id'],
-    'sense2_order_no':row1['sense1_order_no'],
-    'sense2_tag':row1['sense1_tag'],
-    'sense2_hidden': row1['sense1_hidden'],
-    'sense2_heading_occurance':row1['sense1_heading_occurance'],
-    'sense2_lexemes_extra': row1['sense1_lexemes_extra'],
-    'sense1_id': row2[0],
-    'sense1_entry_id': row2[1],
-    'sense1_heading': row2[2],
-    'sense1_gloss': row2[4],
-    'sense1_pos': pos_2,
-    'sense1_parent_sense_id': row2[3],
-    'sense1_order_no':row2[5],
-    'sense1_tag':row2[6],
-    'sense1_hidden': row2[7],
-    'sense1_heading_occurance':occurnace_2,
-    'sense1_lexemes_extra': row2[10]
-    }
+    # occurrance_2 = row2.get("ratioPerMille") if row2.get("ratioPerMille") else 0
+    occurrance_2 = row2[8].get('ratioPerMille') if row2[8] and row2[8].get('ratioPerMille') else 0
+    pos_2 = row2[9].get('Vārdšķira') if row2[9] else "None"
+    # pos_2 = row2['sense1_pos'] if row2['sense1_pos'] else "None"
+    new_row = row1.copy()
+    new_row.update({
+    'sense2_id': row2[0],
+    'sense2_entry_id': row2[1],
+    'sense2_heading': row2[2],
+    'sense2_gloss': row2[4],
+    'sense2_pos': pos_2,
+    'sense2_parent_sense_id': row2[3],
+    'sense2_order_no':row2[5],
+    'sense2_tag':row2[6],
+    'sense2_hidden': row2[7],
+    'sense2_heading_occurance':occurrance_2,
+    'sense2_lexemes_extra': row2[10]
+    })
     hypernym_candidates.append(new_row)
 
 def get_word(heading):
@@ -178,11 +169,8 @@ for row in tqdm(all_rows):
 df_all = pd.DataFrame(dict_all)
 df_all = get_number_of_def(df_all=df_all)
 df_all = df_all[df_all["count_meanings"] < 3]
-df_1000_occurance = df_all.nlargest(20000, 'sense1_heading_occurance')
+df_1000_occurance = df_all.nlargest(50000, 'sense1_heading_occurance')
 df_1000_occurance = df_1000_occurance[df_1000_occurance["sense1_pos"] == "Lietvārds"]
-
-
-
 
 def check_pos_locijums_criteria(name): 
     if name == "":
@@ -199,7 +187,6 @@ def check_pos_locijums_criteria(name):
             locijums = resp["Locījums"]
             if locijums == "Nominatīvs":
                 return True
-            
         return False
     except requests.exceptions.Timeout:
         print(f"Timeout occurred for {url}")
@@ -208,23 +195,19 @@ def check_pos_locijums_criteria(name):
         print(f"Request failed: {e}")
         return None
 
-
-
 for idx, row in tqdm(df_1000_occurance.iterrows(), total=df_1000_occurance.shape[0]):
     gloss = row["sense1_gloss"]
     candidate_virsteikums = process_text_virsteikumi(gloss)
     for candidate in candidate_virsteikums: 
         if check_pos_locijums_criteria(candidate):
-
-            print(candidate)
+            # print(candidate)
             candidate_rows  = get_word(candidate.lower())
             if len(candidate_rows) > 4 :
                 continue
             for candidate_row in candidate_rows:
-                add_hypernym_candidate(candidate_row,row)
-                print("Adding candidate - ") # seit jabut otradak  
-                print(row['sense1_heading'] + " is a hypernym for " + candidate_row[2])
-
+                add_hypernym_candidate(row, candidate_row)
+                # print("Adding candidate - ") # seit jabut otradak  
+                # print(row['sense1_heading'] + " is a hypernym for " + candidate_row[2])
 
 df_hypernym = pd.DataFrame(hypernym_candidates)
 df_hypernym.to_csv("Data selection/new_laws.csv", index=False)

@@ -67,9 +67,13 @@ def get_data(percentage_of_positive):
     none_gloss_df = df[df['rel_type'].isin(['none_gloss_synonym', 'none_gloss_hypernym', 'none_gloss_hyponym'])]
 
     # Sample rows equally from each rel_type
-    synonym_sample = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_synonym'].sample(rows_per_type, random_state=1)
-    hypernym_sample = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_hypernym'].sample(rows_per_type, random_state=1)
-    hyponym_sample = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_hyponym'].sample(rows_per_type, random_state=1)
+    synonym_df = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_synonym']
+    synonym_sample = synonym_df.sample(n=min(rows_per_type, len(synonym_df)), random_state=1)
+    hypernym_df = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_hypernym']
+    hypernym_sample = hypernym_df.sample(n=min(rows_per_type, len(hypernym_df)), random_state=1)
+    hyponym_df = none_gloss_df[none_gloss_df['rel_type'] == 'none_gloss_hyponym']
+    hyponym_sample = hyponym_df.sample(n=min(rows_per_type, len(hyponym_df)), random_state=1)
+
     df = pd.concat([selected_similarity,selected_random,synonym_sample, hyponym_sample,hypernym_sample ,df[~df['rel_type'].isin(['none_random', 'none_similarity',"none_gloss_hypernym",'none_gloss_synonym','none_gloss_hyponym'])]])
     df["sense1_gloss_embedding"] = df["sense1_gloss_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None)
     df["sense2_gloss_embedding"] = df["sense2_gloss_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None) 
@@ -79,7 +83,6 @@ def get_data(percentage_of_positive):
     return df
 
 def train_model(config):
-
     # Specify the device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -177,28 +180,43 @@ def train_model(config):
         train.report(report, checkpoint=checkpoint)
 
     # Save the model after training
-    torch.save(model.state_dict(),'final_weights.pth')
+    torch.save(    {
+        "model_state_dict": model.state_dict(),
+        "config": config,
+    },'final_weights.pth')
 
 # Define the search space
 search_space = {
-    "lr": tune.loguniform(1e-4,5e-5),  # Replace loguniform with grid search
-    "num_epochs": tune.choice([50,70,100,140]),
-    "batch_size": tune.choice([16,32,64]),
+    # "lr": tune.loguniform(1e-4,5e-5),  # Replace loguniform with grid search
+    "lr": tune.choice([1e-5,2e-5]),  # Replace loguniform with grid search
+    "num_epochs": tune.choice([70,100]),
+    "batch_size": tune.choice([16,32]),
     "hidden_sizes": tune.choice([
-        [1024, 512, 256, 128, 64],
-        [2048,1024, 512, 256, 128, 64],
+        # [1024],
         [512],
-        [1024],
-        [512, 256, 128, 64],
-        [2048, 512, 128]
+        [512, 64],
+        # [512, 256, 128],
+        # [256, 64],
     ]),
     "activation": tune.choice(['relu']),
     "optimizer": tune.choice(['Adam',]),
-    "dropout_rate": tune.choice([0.0]),
-    "positive_percentage" : tune.grid_search([0.5])
+    "dropout_rate": tune.choice([0.0, 0.2]),
+    "positive_percentage" : tune.grid_search([0.5, 0.3])
 }
+best_config = {
+    "lr": 1e-5,
+    "num_epochs": 200,
+    "batch_size": 16,
+    "hidden_sizes": [512],
+    "activation": "relu",
+    "optimizer": "Adam",
+    "dropout_rate": 0.0,
+    "positive_percentage": 0.5
+}
+
 def dynamic_trial_name_creator(trial):
     return f"run{trial.trial_id}"
+
 ray.init(num_cpus=12, num_gpus=1)
 analysis = tune.run(
     train_model, # Your training function
@@ -206,5 +224,7 @@ analysis = tune.run(
     trial_dirname_creator=dynamic_trial_name_creator,
     storage_path="/Users/pet/Documents/NLP/SemanticLinkExtraction/1_Training process/ray_results",
     resources_per_trial={"cpu":12, "gpu": 1},
-    num_samples=1500
+    num_samples=100,
+    resume="AUTO"
 )
+

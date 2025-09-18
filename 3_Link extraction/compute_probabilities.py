@@ -12,8 +12,8 @@ def deserialize_tensor(serialized_tensor):
     return pickle.loads(bytes.fromhex(serialized_tensor))
 
 class DynamicSemanticRelationModel(nn.Module):
-    def _init_(self, input_size, num_classes, hidden_sizes, activation, dropout_rate):
-        super(DynamicSemanticRelationModel, self)._init_()
+    def __init__(self, input_size, num_classes, hidden_sizes, activation, dropout_rate):
+        super(DynamicSemanticRelationModel, self).__init__()
         
         layers = []
         in_size = input_size
@@ -43,7 +43,10 @@ class DynamicSemanticRelationModel(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}')
 
-experiment_path = "Production/ray_results/train_model_2024-09-24_13-05-20/run81b2f_00004"
+# experiment_path = "Production/ray_results/train_model_2024-09-24_13-05-20/run81b2f_00004"
+# FIXME - hardcoded ceļš uz labāko modeli
+
+experiment_path = "../1_Training process/ray_results/train_model_2025-08-24_22-09-38/rune1706_00008"
 json_file_path = os.path.join(experiment_path, "params.json")
 
 # Open the JSON file and load it into a dictionary
@@ -60,15 +63,16 @@ model = DynamicSemanticRelationModel(
 ).to(device)
 
 # Load the model weights
-pth_files = glob.glob(os.path.join(experiment_path, '*', '.pth'), recursive=True)
+
+pth_files = glob.glob(os.path.join(experiment_path, 'checkpoint_000000', '*.pth'), recursive=True)
 model.load_state_dict(torch.load(pth_files[0], map_location=device))
 
-df = pd.read_csv(r"Production\Generate candidates\For research paper\candidate_source\gloss4\hypernym_candidates_tezaurs_20000_4_with_embeddings.csv")
-
-df["sense1_gloss_embedding"] = df["sense1_gloss_embedding"].apply(deserialize_tensor)
-df["sense2_gloss_embedding"] = df["sense2_gloss_embedding"].apply(deserialize_tensor)
-df["sense1_heading_embedding"] = df["sense1_heading_embedding"].apply(deserialize_tensor)
-df["sense2_heading_embedding"] = df["sense2_heading_embedding"].apply(deserialize_tensor)
+# df = pd.read_csv(r"Production\Generate candidates\For research paper\candidate_source\gloss4\hypernym_candidates_tezaurs_20000_4_with_embeddings.csv")
+df = pd.read_parquet("candidates_with_embeddings.parquet")
+df["sense1_gloss_embedding"] = df["sense1_gloss_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None)
+df["sense2_gloss_embedding"] = df["sense2_gloss_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None) 
+df["sense1_heading_embedding"] = df["sense1_heading_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None)
+df["sense2_heading_embedding"] = df["sense2_heading_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None) 
 
 print('Model weights loaded.')
 
@@ -96,4 +100,5 @@ with torch.no_grad():
         df[col] = tensor_np[:, i]
 
 df = df.drop(columns=["sense1_gloss_embedding","sense2_gloss_embedding","sense1_heading_embedding","sense2_heading_embedding"])
-df.to_excel("Production/Generate candidates/For research paper/Results_2/hypernym_research_paper_3.xlsx",index=False)
+df.to_parquet('Output/probabilities.parquet')
+df.to_excel("Output/probabilities.xlsx",index=False)
