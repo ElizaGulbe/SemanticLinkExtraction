@@ -40,15 +40,12 @@ def compute_top_euclidean_similarities(tf_tensor, top_n=5):
 
     return top_indices_list
 
-
-
-
-def deserialize_tensor(serialized_tensor):
-    return pickle.loads(bytes.fromhex(serialized_tensor))
-
 def serialize_tensor(tensor):
-    return pickle.dumps(tensor).hex()
+    return base64.b64encode(tensor.cpu().numpy().tobytes()).decode("utf-8")
 
+def deserialize_tensor(s, dtype=torch.float32, shape=(1, 768)):
+    arr = np.frombuffer(base64.b64decode(s), dtype=dtype)
+    return torch.from_numpy(arr).reshape(shape)
 
 # /
 df = pd.read_csv("Production/Prepare dataset/Source/nouns_relation_embeddings.csv")

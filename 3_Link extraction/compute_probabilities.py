@@ -6,10 +6,14 @@ import pickle
 import json
 import os
 import glob
+import base64
 
 # Define the same model structure
-def deserialize_tensor(serialized_tensor):
-    return pickle.loads(bytes.fromhex(serialized_tensor))
+def deserialize_tensor(s, dtype=torch.float32, shape=(1, 768)):
+    if s is None or pd.isna(s):
+        return None
+    arr = np.frombuffer(base64.b64decode(s), dtype=np.float32).copy()
+    return torch.from_numpy(arr).reshape(shape).to(dtype)
 
 class DynamicSemanticRelationModel(nn.Module):
     def __init__(self, input_size, num_classes, hidden_sizes, activation, dropout_rate):
@@ -43,15 +47,15 @@ class DynamicSemanticRelationModel(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f'Using device: {device}')
 
+# TODO - te vispār pareizā modeļa izvēle nav normāli sataisīta, ar rokām jānorāda principā
 # experiment_path = "Production/ray_results/train_model_2024-09-24_13-05-20/run81b2f_00004"
 # FIXME - hardcoded ceļš uz labāko modeli
-
 experiment_path = "../1_Training process/ray_results/train_model_2025-08-24_22-09-38/rune1706_00008"
-json_file_path = os.path.join(experiment_path, "params.json")
-
-# Open the JSON file and load it into a dictionary
-with open(json_file_path, 'r') as file:
-    config = json.load(file)
+# pth_files = glob.glob(os.path.join(experiment_path, 'checkpoint_000000', '*.pth'), recursive=True)
+# model_filename = pth_files[0]
+model_filename = '../1_Training process/final_weights.pth'
+checkpoint = torch.load(model_filename, map_location=device)
+config = checkpoint["config"]   
 
 # Instantiate the model
 model = DynamicSemanticRelationModel(
@@ -63,9 +67,7 @@ model = DynamicSemanticRelationModel(
 ).to(device)
 
 # Load the model weights
-
-pth_files = glob.glob(os.path.join(experiment_path, 'checkpoint_000000', '*.pth'), recursive=True)
-model.load_state_dict(torch.load(pth_files[0], map_location=device))
+model.load_state_dict(checkpoint["model_state_dict"])
 
 # df = pd.read_csv(r"Production\Generate candidates\For research paper\candidate_source\gloss4\hypernym_candidates_tezaurs_20000_4_with_embeddings.csv")
 df = pd.read_parquet("candidates_with_embeddings.parquet")
@@ -74,7 +76,7 @@ df["sense2_gloss_embedding"] = df["sense2_gloss_embedding"].apply(lambda x: dese
 df["sense1_heading_embedding"] = df["sense1_heading_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None)
 df["sense2_heading_embedding"] = df["sense2_heading_embedding"].apply(lambda x: deserialize_tensor(x) if x is not None else None) 
 
-print('Model weights loaded.')
+print(f'Model weights loaded from {model_filename}')
 
 concatenated_vectors = df.apply(
     lambda row: torch.cat((row['sense1_heading_embedding'].flatten().cpu(),row['sense1_gloss_embedding'].flatten().cpu(), row['sense2_heading_embedding'].flatten().cpu() ,row['sense2_gloss_embedding'].flatten().cpu())),

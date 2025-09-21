@@ -1,9 +1,10 @@
 import pandas as pd 
 from tqdm import tqdm 
 import pickle
+import base64
 tqdm.pandas(desc="Generating random examples")
 import numpy as np
-
+import torch
 
 """In every model training process it is important to add negative examples. Because of the size of the dataset, I focused only on 
 hypernymy and synonymy because there was insufficient training data for other examples. """
@@ -52,11 +53,14 @@ def compute_top_euclidean_similarities_np(np_tensor, top_n=5):
     
     return top_indices_list
 
-def deserialize_tensor(serialized_tensor):
-    return pickle.loads(bytes.fromhex(serialized_tensor))
-
 def serialize_tensor(tensor):
-    return pickle.dumps(tensor).hex()
+    return base64.b64encode(tensor.cpu().numpy().tobytes()).decode("utf-8")
+
+def deserialize_tensor(s, dtype=torch.float32, shape=(1, 768)):
+    if s is None or pd.isna(s):
+        return None
+    arr = np.frombuffer(base64.b64decode(s), dtype=np.float32).copy()
+    return torch.from_numpy(arr).reshape(shape).to(dtype)
 
 embeddings_only = []
 def add_embedding_only_row(row):

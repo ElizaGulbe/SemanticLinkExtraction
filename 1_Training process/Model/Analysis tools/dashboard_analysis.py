@@ -6,7 +6,7 @@ import seaborn as sns
 from sklearn.linear_model import LinearRegression
 
 # Set the path to the directory containing the runs
-results_dir = "../../ray_results/train_model_2025-08-24_22-09-38"
+results_dir = "../../ray_results/train_model_2025-09-19_21-30-52"
 
 # Initialize an empty list to store results
 data = []

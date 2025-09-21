@@ -134,6 +134,8 @@ Once we have trained the model to predict hypernymy, synonymy or other relations
 This repository provides implementation code for the second and third strategy.  
 ### 3. Link extraction
 
+TODO: 
+  
 
 
 

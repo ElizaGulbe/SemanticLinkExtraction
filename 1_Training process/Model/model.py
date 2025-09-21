@@ -4,6 +4,7 @@ import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, classification_report
 import pandas as pd
+import numpy as np
 import pickle
 from tqdm import tqdm 
 from ray import tune, train
@@ -13,9 +14,13 @@ import os
 import tempfile
 from ray.train import Checkpoint
 from torch.utils.data import DataLoader, TensorDataset
-def deserialize_tensor(serialized_tensor):
-        return pickle.loads(bytes.fromhex(serialized_tensor))
+import base64
 
+def deserialize_tensor(s, dtype=torch.float32, shape=(1, 768)):
+    if s is None or pd.isna(s):
+        return None
+    arr = np.frombuffer(base64.b64decode(s), dtype=np.float32).copy()
+    return torch.from_numpy(arr).reshape(shape).to(dtype)
 
 class DynamicSemanticRelationModel(nn.Module):
     def __init__(self, input_size, num_classes, hidden_sizes, activation, dropout_rate):
@@ -188,20 +193,21 @@ def train_model(config):
 # Define the search space
 search_space = {
     # "lr": tune.loguniform(1e-4,5e-5),  # Replace loguniform with grid search
-    "lr": tune.choice([1e-5,2e-5]),  # Replace loguniform with grid search
-    "num_epochs": tune.choice([70,100]),
-    "batch_size": tune.choice([16,32]),
+    "lr": tune.choice([1e-5]),
+    "num_epochs": tune.choice([100]),
+    "batch_size": tune.choice([16]),
     "hidden_sizes": tune.choice([
         # [1024],
+        [256],
         [512],
-        [512, 64],
+        # [512, 64],
         # [512, 256, 128],
-        # [256, 64],
+        # [256, 16],
     ]),
     "activation": tune.choice(['relu']),
     "optimizer": tune.choice(['Adam',]),
-    "dropout_rate": tune.choice([0.0, 0.2]),
-    "positive_percentage" : tune.grid_search([0.5, 0.3])
+    "dropout_rate": tune.choice([0.1, 0.2]),
+    "positive_percentage" : tune.choice([0.4, 0.5])
 }
 best_config = {
     "lr": 1e-5,
@@ -210,21 +216,22 @@ best_config = {
     "hidden_sizes": [512],
     "activation": "relu",
     "optimizer": "Adam",
-    "dropout_rate": 0.0,
-    "positive_percentage": 0.5
+    "dropout_rate": 0.2,
+    "positive_percentage": 0.4
 }
 
 def dynamic_trial_name_creator(trial):
     return f"run{trial.trial_id}"
 
-ray.init(num_cpus=12, num_gpus=1)
-analysis = tune.run(
-    train_model, # Your training function
-    config=search_space,
-    trial_dirname_creator=dynamic_trial_name_creator,
-    storage_path="/Users/pet/Documents/NLP/SemanticLinkExtraction/1_Training process/ray_results",
-    resources_per_trial={"cpu":12, "gpu": 1},
-    num_samples=100,
-    resume="AUTO"
-)
+# ray.init(num_cpus=12, num_gpus=1)
+# analysis = tune.run(
+#     train_model, # Your training function
+#     config=search_space,
+#     trial_dirname_creator=dynamic_trial_name_creator,
+#     storage_path="/Users/pet/Documents/NLP/SemanticLinkExtraction/1_Training process/ray_results",
+#     resources_per_trial={"cpu":12, "gpu": 1},
+#     num_samples=100,
+#     resume="AUTO"
+# )
 
+train_model(best_config)

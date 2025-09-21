@@ -4,6 +4,7 @@ root_folder = '../2_Candidate generation/Data selection/'
 # source_filenames = ['hypernym_candidates_tezaurs_20000_4', 'new_laws', 'synonym_candidates_top10000_4_meaning']
 source_filenames = ['hypernym_candidates_tezaurs_20000_4', 'synonym_candidates_top10000_4_meaning']
 # TODO - new_laws trūkst datu par sense_2 
+# source_filenames = ['minitest']
 
 dfs = []
 for source_filename in source_filenames:
